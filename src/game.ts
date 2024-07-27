@@ -63,7 +63,7 @@ const PRODUCTION_RATE = 10;
 
 
 
-let baseResources: string[] = ['water', 'fire', 'earth', 'air'];
+let baseResources: string[] = ['water', 'fire', 'earth', 'Steam Engine'];
 let canvasResources: any[] = [];
 
 function createResourceElement(resource: string): HTMLElement {
@@ -75,9 +75,11 @@ function createResourceElement(resource: string): HTMLElement {
   elem.addEventListener('dragstart', drag);
   
   // Add a loading circle
-  const loadingCircle = document.createElement('div');
-  loadingCircle.className = 'loading-circle';
-  elem.appendChild(loadingCircle);
+  if (resource === "Steam Engine") {
+    const loadingCircle = document.createElement('div');
+    loadingCircle.className = 'loading-circle';
+    elem.appendChild(loadingCircle);
+  }
   
   return elem;
 }
@@ -208,17 +210,26 @@ function stopLoading(elem: HTMLElement) {
   const closestTwo = distances.slice(0, 2);
 
   // Step 5: Animate the closest two elements
+  let animationsCompleted = 0;
   closestTwo.forEach(({ resource }) => {
     const startLeft = parseInt(resource.style.left);
     const startTop = parseInt(resource.style.top);
     const endLeft = parseInt(elem.style.left);
     const endTop = parseInt(elem.style.top);
 
-    animateElement(resource, startLeft, startTop, endLeft, endTop);
+    animateElement(resource, startLeft, startTop, endLeft, endTop, () => {
+      animationsCompleted++;
+      if (animationsCompleted === closestTwo.length) {
+        // All animations completed, now change text to "Steam"
+        resources.forEach(resource => {
+          resource.textContent = "Steam";
+        });
+      }
+    });
   });
 }
 
-function animateElement(element: HTMLElement, startLeft: number, startTop: number, endLeft: number, endTop: number) {
+function animateElement(element: HTMLElement, startLeft: number, startTop: number, endLeft: number, endTop: number, onComplete: () => void) {
   const duration = 1000; // Animation duration in milliseconds
   const startTime = performance.now();
 
@@ -234,6 +245,8 @@ function animateElement(element: HTMLElement, startLeft: number, startTop: numbe
 
     if (progress < 1) {
       requestAnimationFrame(step);
+    } else {
+      onComplete(); // Call the onComplete callback when animation is finished
     }
   }
 

@@ -2598,13 +2598,11 @@ var createResourceElement = function(resource) {
   elem.draggable = true;
   elem.dataset.element = resource;
   elem.addEventListener("dragstart", drag);
-  
   if (resource === "Steam Engine") {
     const loadingCircle = document.createElement("div");
     loadingCircle.className = "loading-circle";
     elem.appendChild(loadingCircle);
   }
-  
   return elem;
 };
 var updatePalette = function() {
@@ -2619,9 +2617,7 @@ var drag = function(event) {
   }
 };
 var startLoading = function(elem) {
-  // if (elem.dataset.element === "Steam Engine") {
-    elem.classList.add("loading");
-  // }
+  elem.classList.add("loading");
 };
 var stopLoading = function(elem) {
   elem.classList.remove("loading");
@@ -2639,15 +2635,23 @@ var stopLoading = function(elem) {
   });
   distances.sort((a, b) => a.distance - b.distance);
   const closestTwo = distances.slice(0, 2);
+  let animationsCompleted = 0;
   closestTwo.forEach(({ resource }) => {
     const startLeft = parseInt(resource.style.left);
     const startTop = parseInt(resource.style.top);
     const endLeft = parseInt(elem.style.left);
     const endTop = parseInt(elem.style.top);
-    animateElement(resource, startLeft, startTop, endLeft, endTop);
+    animateElement(resource, startLeft, startTop, endLeft, endTop, () => {
+      animationsCompleted++;
+      if (animationsCompleted === closestTwo.length) {
+        resources.forEach((resource2) => {
+          resource2.textContent = "Steam";
+        });
+      }
+    });
   });
 };
-var animateElement = function(element, startLeft, startTop, endLeft, endTop) {
+var animateElement = function(element, startLeft, startTop, endLeft, endTop, onComplete) {
   const duration = 1000;
   const startTime = performance.now();
   function step(currentTime) {
@@ -2659,6 +2663,8 @@ var animateElement = function(element, startLeft, startTop, endLeft, endTop) {
     element.style.top = `${currentTop}px`;
     if (progress < 1) {
       requestAnimationFrame(step);
+    } else {
+      onComplete();
     }
   }
   requestAnimationFrame(step);
