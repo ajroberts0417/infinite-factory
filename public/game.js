@@ -2607,41 +2607,87 @@ Object.assign(lookup2, {
 });
 
 // src/game.ts
-var createResourceElement = function(resource) {
+var getContrastColor = function(hex) {
+  hex = hex.replace(/^#/, "");
+  let r = parseInt(hex.substring(0, 2), 16);
+  let g = parseInt(hex.substring(2, 4), 16);
+  let b = parseInt(hex.substring(4, 6), 16);
+  let brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness > 155 ? "#000000" : "#FFFFFF";
+};
+var createResourceInstance = function(resource) {
   const elem = document.createElement("div");
-  elem.className = "resource";
-  elem.textContent = resource;
+  elem.style.backgroundColor = resource.color;
+  elem.style.color = getContrastColor(resource.color);
+  elem.className = `resource ${resource.name}`;
+  elem.textContent = resource.name;
   elem.draggable = true;
-  elem.dataset.element = resource;
+  elem.dataset.resource = resource.name;
+  const uniqueId = `resource-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  elem.dataset.id = uniqueId;
   elem.addEventListener("dragstart", drag);
-  return elem;
+  const resourceInstance = {
+    id: uniqueId,
+    resource,
+    htmlElement: elem
+  };
+  console.log("new resourceInstance made, adding to canvas resources", resourceInstance);
+  canvasResources.push(resourceInstance);
+  return resourceInstance;
 };
 var updatePalette = function() {
   palette.innerHTML = "";
-  baseResources.forEach((resource) => {
-    palette.appendChild(createResourceElement(resource));
+  Object.values(resourceLibrary).forEach((resource) => {
+    const resourceInstance = createResourceInstance(resource);
+    palette.appendChild(resourceInstance.htmlElement);
   });
 };
 var drag = function(event) {
   if (event.dataTransfer && event.target instanceof HTMLElement) {
-    event.dataTransfer.setData("text/plain", event.target.dataset.element || "");
+    event.dataTransfer.setData("text/plain", event.target.dataset.id || "");
   }
 };
 var socket4 = lookup2();
 var palette = document.getElementById("palette");
 var canvas = document.getElementById("canvas");
 var resultDiv = document.getElementById("result");
-var baseResources = ["water", "fire", "earth", "air"];
+var fire = {
+  name: "fire",
+  color: "#e74c3c",
+  emoji: "\uD83D\uDD25",
+  product: null,
+  recipe: null
+};
+var iron = {
+  name: "iron",
+  color: "#b2b2b2",
+  emoji: "\u26CF\uFE0F",
+  product: null,
+  recipe: null
+};
+var resourceLibrary = {
+  fire,
+  iron
+};
+var canvasResources = [];
 canvas.addEventListener("dragover", (event) => {
   event.preventDefault();
 });
 canvas.addEventListener("drop", (event) => {
   event.preventDefault();
-  const resource = event.dataTransfer?.getData("text/plain");
-  if (!resource)
+  const resourceId = event.dataTransfer?.getData("text/plain");
+  console.log(resourceId);
+  if (!resourceId)
     return;
-  console.log("Dropped resource:", resource);
-  const newElem = createResourceElement(resource);
+  const resourceInstance = canvasResources.find((resource) => resource.id === resourceId);
+  console.log("resourceInstance", resourceInstance);
+  if (!resourceInstance) {
+    console.log("no resource instance found on the canvas, attempting to create");
+    return;
+  }
+  console.log("Dropped resource instance:", resourceInstance);
+  const newResourceInstance = createResourceInstance(resourceInstance.resource);
+  const newElem = newResourceInstance.htmlElement;
   const canvasRect = canvas.getBoundingClientRect();
   const x = event.clientX - canvasRect.left;
   const y = event.clientY - canvasRect.top;
@@ -2651,9 +2697,14 @@ canvas.addEventListener("drop", (event) => {
   newElem.style.zIndex = "10";
   console.log("New element position:", newElem.style.left, newElem.style.top);
   const existingResource = document.elementFromPoint(event.clientX, event.clientY);
+  console.log("existingResource", existingResource);
   if (existingResource && existingResource.classList.contains("resource") && existingResource !== newElem) {
-    console.log("Crafting:", existingResource.dataset.element, resource);
-    socket4.emit("craft", [existingResource.dataset.element, resource]);
+    const existingResourceInstance = canvasResources.find((resource) => resource.htmlElement === existingResource);
+    console.log("existingResourceInstance", existingResourceInstance);
+    if (!existingResourceInstance)
+      return;
+    console.log("Crafting:", existingResourceInstance.resource, resourceInstance.resource);
+    socket4.emit("craft", [existingResourceInstance.resource, resourceInstance.resource]);
     existingResource.remove();
   } else {
     canvas.appendChild(newElem);
@@ -2665,14 +2716,17 @@ socket4.on("craftResult", (result) => {
   if (result.error) {
     resultDiv.innerHTML = `<p style="color: red;">${result.error}</p>`;
   } else if (result.data) {
-    const newResource = result.data.resource.replace(/[^a-zA-Z]/g, "").toLowerCase();
+    console.log("result.data", result.data);
+    const newResource = result.data;
+    console.log("newResource", newResource);
     resultDiv.innerHTML = `<p>New resource created: ${newResource}</p>`;
     console.log("New resource created:", newResource);
-    if (!baseResources.includes(newResource)) {
-      baseResources.push(newResource);
+    if (!Object.keys(resourceLibrary).includes(newResource.name)) {
+      resourceLibrary[newResource.name] = newResource;
       updatePalette();
     }
-    const newElem = createResourceElement(newResource);
+    const resourceInstance = createResourceInstance(newResource);
+    const newElem = resourceInstance.htmlElement;
     newElem.style.position = "absolute";
     newElem.style.left = `${canvas.clientWidth / 2 - 40}px`;
     newElem.style.top = `${canvas.clientHeight / 2 - 40}px`;
