@@ -72,8 +72,12 @@ function createResourceElement(resource: string): HTMLElement {
   elem.textContent = resource;
   elem.draggable = true;
   elem.dataset.element = resource;
-  // (elem as any).backgroundColor = getColor(resource);  // Assuming getColor is defined elsewhere
   elem.addEventListener('dragstart', drag);
+
+  const loadingCircle = document.createElement('div');
+  loadingCircle.className = 'loading-circle';
+  elem.appendChild(loadingCircle);
+
   return elem;
 }
 
@@ -122,7 +126,7 @@ canvas.addEventListener('drop', (event: DragEvent) => {
     existingResource.remove();
   } else {
     canvas.appendChild(newElem);
-    console.log("Added new element to canvas");
+    startLoading(newElem);
   }
 
   // Log canvas children for debugging
@@ -153,8 +157,13 @@ socket.on('craftResult', (result: CraftResult) => {
     newElem.style.top = `${canvas.clientHeight / 2 - 40}px`;
     newElem.style.zIndex = '10';
     canvas.appendChild(newElem);
+    startLoading(newElem);
     console.log("Added crafted resource to canvas");
   }
 });
+
+function startLoading(elem: HTMLElement) {
+  elem.classList.add('loading');
+}
 
 updatePalette();

@@ -50,6 +50,7 @@
             user-select: none;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
         }
 
         .resource:hover {
@@ -79,6 +80,39 @@
             border-radius: 5px;
             background-color: #fff;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading-circle {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .resource.loading .loading-circle {
+            opacity: 1;
+        }
+
+        .loading-circle::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 3px solid transparent;
+            border-top-color: inherit;
+            border-radius: 50%;
+            animation: fillUp 60s linear forwards;
+        }
+
+        @keyframes fillUp {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
