@@ -2598,9 +2598,13 @@ var createResourceElement = function(resource) {
   elem.draggable = true;
   elem.dataset.element = resource;
   elem.addEventListener("dragstart", drag);
-  const loadingCircle = document.createElement("div");
-  loadingCircle.className = "loading-circle";
-  elem.appendChild(loadingCircle);
+  
+  if (resource === "Steam Engine") {
+    const loadingCircle = document.createElement("div");
+    loadingCircle.className = "loading-circle";
+    elem.appendChild(loadingCircle);
+  }
+  
   return elem;
 };
 var updatePalette = function() {
@@ -2615,7 +2619,9 @@ var drag = function(event) {
   }
 };
 var startLoading = function(elem) {
-  elem.classList.add("loading");
+  // if (elem.dataset.element === "Steam Engine") {
+    elem.classList.add("loading");
+  // }
 };
 var stopLoading = function(elem) {
   elem.classList.remove("loading");
