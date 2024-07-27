@@ -2661,7 +2661,7 @@ var socket4 = lookup2();
 var palette = document.getElementById("palette");
 var canvas = document.getElementById("canvas");
 var resultDiv = document.getElementById("result");
-var baseResources = ["water", "fire", "earth", "air"];
+var baseResources = ["water", "fire", "earth", "Steam Engine"];
 canvas.addEventListener("dragover", (event) => {
   event.preventDefault();
 });
