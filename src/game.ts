@@ -10,12 +10,50 @@ const resultDiv = document.getElementById('result') as HTMLElement;
 type Resource = {
   name: string;
   color: string;
-  produces: Resource | null;
-  timeToProduce: number; // in milliseconds
-  costs: Resource[];
+  product: Resource | null;
+  recipe: Resource[] | null; // this must exist in the canvas for the factory to produce the "produces" resource
+}
+
+const fire: Resource = {
+  name: 'fire',
+  color: '#e74c3c',
+  product: null,
+  recipe: null,
+}
+
+// "base resource" (it has no recipe, it is given by the game)
+const iron: Resource = {
+  name: 'fire',
+  color: '#e74c3c',
+  product: null,
+  recipe: null,
+}
+
+// intermediate resource (it has a recipe, but no product)
+const gear: Resource = {
+  name: 'gear',
+  color: '#fff',
+  product: null,
+  recipe: [fire, iron],
+}
+
+// factory resurces (it has a product, AND a recipe)
+const ironFactory: Resource = {
+  name: 'iron factory',
+  color: '#fff',
+  product: iron,
+  recipe: [gear, gear],
+}
+
+const gearFactory: Resource = {
+  name: 'gear factory',
+  color: '#fff',
+  product: gear,
+  recipe: [ironFactory, ironFactory],
 }
 
 // 1. add a production rate
+const PRODUCTION_RATE = 10;
 
 
 
