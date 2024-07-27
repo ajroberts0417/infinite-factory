@@ -1,0 +1,178 @@
+diff --git a/index.html b/index.html
+index 9e97346..dbc7db2 100644
+--- a/index.html
++++ b/index.html
+@@ -50,6 +50,7 @@
+             user-select: none;
+             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+             transition: transform 0.2s, box-shadow 0.2s;
++            position: relative;
+         }
+ 
+         .resource:hover {
+@@ -80,6 +81,29 @@
+             background-color: #fff;
+             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+         }
++
++        .loading-circle {
++            position: absolute;
++            top: -5px;
++            left: -5px;
++            right: -5px;
++            bottom: -5px;
++            border: 3px solid transparent;
++            border-top-color: #3498db;
++            border-radius: 50%;
++            animation: spin 1s linear infinite;
++            opacity: 0;
++            transition: opacity 0.3s;
++        }
++
++        .resource.loading .loading-circle {
++            opacity: 1;
++        }
++
++        @keyframes spin {
++            0% { transform: rotate(0deg); }
++            100% { transform: rotate(360deg); }
++        }
+     </style>
+ </head>
+ 
+@@ -105,6 +129,11 @@
+             elem.draggable = true;
+             elem.dataset.element = resource;
+             elem.addEventListener('dragstart', drag);
++
++            const loadingCircle = document.createElement('div');
++            loadingCircle.className = 'loading-circle';
++            elem.appendChild(loadingCircle);
++
+             return elem;
+         }
+ 
+@@ -149,6 +178,7 @@
+                 existingResource.remove();
+             } else {
+                 canvas.appendChild(newElem);
++                startLoading(newElem);
+                 console.log("Added new element to canvas");
+             }
+ 
+@@ -156,6 +186,14 @@
+             console.log("Canvas children:", canvas.children);
+         });
+ 
++        function startLoading(elem) {
++            elem.classList.add('loading');
++        }
++
++        function stopLoading(elem) {
++            elem.classList.remove('loading');
++        }
++
+         socket.on('craftResult', (result) => {
+             if (result.error) {
+                 resultDiv.innerHTML = `<p style="color: red;">${result.error}</p>`;
+@@ -173,6 +211,13 @@
+                 newElem.style.top = `${canvas.clientHeight / 2 - 40}px`;
+                 newElem.style.zIndex = '10';
+                 canvas.appendChild(newElem);
++                startLoading(newElem);  // Start loading for the new element
++                
++                // Simulate a delay before stopping the loading (replace this with actual logic)
++                setTimeout(() => {
++                    stopLoading(newElem);
++                }, 2000);  // Stop loading after 2 seconds
++                
+                 console.log("Added crafted resource to canvas");
+             }
+         });
+diff --git a/public/game.js b/public/game.js
+index 66a830c..14949d4 100644
+--- a/public/game.js
++++ b/public/game.js
+@@ -1532,26 +1532,10 @@ function url(uri, path = "", loc) {
+ // node_modules/socket.io-parser/build/esm/index.js
+ var exports_esm = {};
+ __export(exports_esm, {
+-  protocol: () => {
+-    {
+-      return protocol3;
+-    }
+-  },
+-  PacketType: () => {
+-    {
+-      return PacketType;
+-    }
+-  },
+-  Encoder: () => {
+-    {
+-      return Encoder;
+-    }
+-  },
+-  Decoder: () => {
+-    {
+-      return Decoder;
+-    }
+-  }
++  protocol: () => protocol3,
++  PacketType: () => PacketType,
++  Encoder: () => Encoder,
++  Decoder: () => Decoder
+ });
+ 
+ // node_modules/socket.io-parser/build/esm/is-binary.js
+diff --git a/src/game.ts b/src/game.ts
+index ddc1eb8..627eccf 100644
+--- a/src/game.ts
++++ b/src/game.ts
+@@ -10,9 +10,9 @@ const resultDiv = document.getElementById('result') as HTMLElement;
+ type Resource = {
+   name: string;
+   color: string;
+-  produces: Resource | null;
+-  timeToProduce: number; // in milliseconds
+-  costs: Resource[];
++  emoji: string;
++  product: Resource | null; // in milliseconds
++  recipe: Resource[] | null;
+ }
+ 
+ // 1. add a production rate
+@@ -31,6 +31,12 @@ function createResourceElement(resource: string): HTMLElement {
+   elem.dataset.element = resource;
+   (elem as any).backgroundColor = getColor(resource);  // Assuming getColor is defined elsewhere
+   elem.addEventListener('dragstart', drag);
++  
++  // Add a loading circle
++  const loadingCircle = document.createElement('div');
++  loadingCircle.className = 'loading-circle';
++  elem.appendChild(loadingCircle);
++  
+   return elem;
+ }
+ 
+@@ -79,6 +85,7 @@ canvas.addEventListener('drop', (event: DragEvent) => {
+     existingResource.remove();
+   } else {
+     canvas.appendChild(newElem);
++    startLoading(newElem);
+     console.log("Added new element to canvas");
+   }
+ 
+@@ -114,4 +121,12 @@ socket.on('craftResult', (result: CraftResult) => {
+   }
+ });
+ 
++function startLoading(elem: HTMLElement) {
++  elem.classList.add('loading');
++}
++
++function stopLoading(elem: HTMLElement) {
++  elem.classList.remove('loading');
++}
++
+ updatePalette();
+\ No newline at end of file

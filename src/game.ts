@@ -128,6 +128,12 @@ canvas.addEventListener('drop', (event: DragEvent) => {
   } else {
     canvas.appendChild(newElem);
     startLoading(newElem);
+
+    setTimeout(() => {
+      console.log("--------stopLoading 2--------")
+      stopLoading(newElem);
+    }, 6000);
+
     console.log("Added new element to canvas");
   }
 
@@ -143,6 +149,8 @@ interface CraftResult {
 }
 
 socket.on('craftResult', (result: CraftResult) => {
+  console.log("--------craftResult--------")
+
   if (result.error) {
     resultDiv.innerHTML = `<p style="color: red;">${result.error}</p>`;
   } else if (result.data) {
@@ -165,7 +173,7 @@ socket.on('craftResult', (result: CraftResult) => {
     
     setTimeout(() => {
         stopLoading(newElem);
-    }, 60000);  // 60 seconds to match the CSS animation
+    }, 2000);  // 60 seconds to match the CSS animation
   }
 });
 
@@ -175,6 +183,61 @@ function startLoading(elem: HTMLElement) {
 
 function stopLoading(elem: HTMLElement) {
   elem.classList.remove('loading');
+
+  // Step 1: Get all elements on the canvas and their positions
+  const resources = Array.from(canvas.getElementsByClassName('resource')) as HTMLElement[];
+
+  // Step 2: Exclude the current element
+  const otherResources = resources.filter(resource => resource !== elem);
+
+  // Step 3: Calculate distances to the current element
+  const elemRect = elem.getBoundingClientRect();
+  const elemCenterX = elemRect.left + elemRect.width / 2;
+  const elemCenterY = elemRect.top + elemRect.height / 2;
+
+  const distances = otherResources.map(resource => {
+    const rect = resource.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const distance = Math.sqrt(Math.pow(centerX - elemCenterX, 2) + Math.pow(centerY - elemCenterY, 2));
+    return { resource, distance };
+  });
+
+  // Step 4: Find the closest 2 elements
+  distances.sort((a, b) => a.distance - b.distance);
+  const closestTwo = distances.slice(0, 2);
+
+  // Step 5: Animate the closest two elements
+  closestTwo.forEach(({ resource }) => {
+    const startLeft = parseInt(resource.style.left);
+    const startTop = parseInt(resource.style.top);
+    const endLeft = parseInt(elem.style.left);
+    const endTop = parseInt(elem.style.top);
+
+    animateElement(resource, startLeft, startTop, endLeft, endTop);
+  });
+}
+
+function animateElement(element: HTMLElement, startLeft: number, startTop: number, endLeft: number, endTop: number) {
+  const duration = 1000; // Animation duration in milliseconds
+  const startTime = performance.now();
+
+  function step(currentTime: number) {
+    const elapsedTime = currentTime - startTime;
+    const progress = Math.min(elapsedTime / duration, 1);
+
+    const currentLeft = startLeft + (endLeft - startLeft) * progress;
+    const currentTop = startTop + (endTop - startTop) * progress;
+
+    element.style.left = `${currentLeft}px`;
+    element.style.top = `${currentTop}px`;
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  requestAnimationFrame(step);
 }
 
 updatePalette();

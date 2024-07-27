@@ -2598,6 +2598,9 @@ var createResourceElement = function(resource) {
   elem.draggable = true;
   elem.dataset.element = resource;
   elem.addEventListener("dragstart", drag);
+  const loadingCircle = document.createElement("div");
+  loadingCircle.className = "loading-circle";
+  elem.appendChild(loadingCircle);
   return elem;
 };
 var updatePalette = function() {
@@ -2610,6 +2613,49 @@ var drag = function(event) {
   if (event.dataTransfer && event.target instanceof HTMLElement) {
     event.dataTransfer.setData("text/plain", event.target.dataset.element || "");
   }
+};
+var startLoading = function(elem) {
+  elem.classList.add("loading");
+};
+var stopLoading = function(elem) {
+  elem.classList.remove("loading");
+  const resources = Array.from(canvas.getElementsByClassName("resource"));
+  const otherResources = resources.filter((resource) => resource !== elem);
+  const elemRect = elem.getBoundingClientRect();
+  const elemCenterX = elemRect.left + elemRect.width / 2;
+  const elemCenterY = elemRect.top + elemRect.height / 2;
+  const distances = otherResources.map((resource) => {
+    const rect = resource.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const distance = Math.sqrt(Math.pow(centerX - elemCenterX, 2) + Math.pow(centerY - elemCenterY, 2));
+    return { resource, distance };
+  });
+  distances.sort((a, b) => a.distance - b.distance);
+  const closestTwo = distances.slice(0, 2);
+  closestTwo.forEach(({ resource }) => {
+    const startLeft = parseInt(resource.style.left);
+    const startTop = parseInt(resource.style.top);
+    const endLeft = parseInt(elem.style.left);
+    const endTop = parseInt(elem.style.top);
+    animateElement(resource, startLeft, startTop, endLeft, endTop);
+  });
+};
+var animateElement = function(element, startLeft, startTop, endLeft, endTop) {
+  const duration = 1000;
+  const startTime = performance.now();
+  function step(currentTime) {
+    const elapsedTime = currentTime - startTime;
+    const progress = Math.min(elapsedTime / duration, 1);
+    const currentLeft = startLeft + (endLeft - startLeft) * progress;
+    const currentTop = startTop + (endTop - startTop) * progress;
+    element.style.left = `${currentLeft}px`;
+    element.style.top = `${currentTop}px`;
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    }
+  }
+  requestAnimationFrame(step);
 };
 var socket4 = lookup2();
 var palette = document.getElementById("palette");
@@ -2641,11 +2687,17 @@ canvas.addEventListener("drop", (event) => {
     existingResource.remove();
   } else {
     canvas.appendChild(newElem);
+    startLoading(newElem);
+    setTimeout(() => {
+      console.log("--------stopLoading 2--------");
+      stopLoading(newElem);
+    }, 6000);
     console.log("Added new element to canvas");
   }
   console.log("Canvas children:", canvas.children);
 });
 socket4.on("craftResult", (result) => {
+  console.log("--------craftResult--------");
   if (result.error) {
     resultDiv.innerHTML = `<p style="color: red;">${result.error}</p>`;
   } else if (result.data) {
@@ -2662,7 +2714,12 @@ socket4.on("craftResult", (result) => {
     newElem.style.top = `${canvas.clientHeight / 2 - 40}px`;
     newElem.style.zIndex = "10";
     canvas.appendChild(newElem);
+    startLoading(newElem);
     console.log("Added crafted resource to canvas");
+    startLoading(newElem);
+    setTimeout(() => {
+      stopLoading(newElem);
+    }, 2000);
   }
 });
 updatePalette();
