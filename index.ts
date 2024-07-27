@@ -5,7 +5,8 @@ import path from 'path';
 import forge from "./forge/client";
 const readline = require('readline');
 import prompt from "prompt-sync";
-import { watch } from 'fs';
+import { existsSync, watch } from 'fs';
+import mime from 'mime-types';
 
 
 watch("./src/game.ts", async (event, filename) => {
@@ -26,6 +27,15 @@ await Bun.build({
 });
 // change to server
 
+const filePath = path.join(__dirname, 'public', 'game.js');
+if (existsSync(filePath)) {
+  console.log("File exists");
+  const contentType = mime.lookup(filePath);
+  console.log("Content-Type:", contentType);
+} else {
+  console.log("File does not exist");
+}
+
 
 const app = express();
 const server = http.createServer(app);
@@ -38,7 +48,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve index.html
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/public/game.js', (req, res) => {
+  res.type('application/javascript');
+  res.sendFile(path.join(__dirname, 'public', 'game.js'));
 });
 
 // Base resources

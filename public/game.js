@@ -2613,7 +2613,6 @@ var createResourceElement = function(resource) {
   elem.textContent = resource;
   elem.draggable = true;
   elem.dataset.element = resource;
-  elem.backgroundColor = getColor(resource);
   elem.addEventListener("dragstart", drag);
   return elem;
 };

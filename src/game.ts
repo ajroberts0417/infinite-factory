@@ -63,7 +63,6 @@ const PRODUCTION_RATE = 10;
 
 
 
-
 let baseResources: string[] = ['water', 'fire', 'earth', 'air'];
 let canvasResources: any[] = [];
 
@@ -73,7 +72,7 @@ function createResourceElement(resource: string): HTMLElement {
   elem.textContent = resource;
   elem.draggable = true;
   elem.dataset.element = resource;
-  (elem as any).backgroundColor = getColor(resource);  // Assuming getColor is defined elsewhere
+  // (elem as any).backgroundColor = getColor(resource);  // Assuming getColor is defined elsewhere
   elem.addEventListener('dragstart', drag);
   return elem;
 }
