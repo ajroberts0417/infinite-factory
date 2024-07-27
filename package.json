@@ -5,9 +5,9 @@
   "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "bun run src/server.ts",
+    "start": "bun --watch index.ts",
     "build": "bun build ./src/game.ts --outdir ./public",
-    "dev": "bun run build.ts"
+    "dev": "bun --watch index.ts"
   },
   "author": "",
   "license": "ISC",

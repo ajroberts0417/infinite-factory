@@ -1532,26 +1532,10 @@ function url(uri, path = "", loc) {
 // node_modules/socket.io-parser/build/esm/index.js
 var exports_esm = {};
 __export(exports_esm, {
-  protocol: () => {
-    {
-      return protocol3;
-    }
-  },
-  PacketType: () => {
-    {
-      return PacketType;
-    }
-  },
-  Encoder: () => {
-    {
-      return Encoder;
-    }
-  },
-  Decoder: () => {
-    {
-      return Decoder;
-    }
-  }
+  protocol: () => protocol3,
+  PacketType: () => PacketType,
+  Encoder: () => Encoder,
+  Decoder: () => Decoder
 });
 
 // node_modules/socket.io-parser/build/esm/is-binary.js

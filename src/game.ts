@@ -73,11 +73,12 @@ function createResourceElement(resource: string): HTMLElement {
   elem.draggable = true;
   elem.dataset.element = resource;
   elem.addEventListener('dragstart', drag);
-
+  
+  // Add a loading circle
   const loadingCircle = document.createElement('div');
   loadingCircle.className = 'loading-circle';
   elem.appendChild(loadingCircle);
-
+  
   return elem;
 }
 
@@ -127,6 +128,7 @@ canvas.addEventListener('drop', (event: DragEvent) => {
   } else {
     canvas.appendChild(newElem);
     startLoading(newElem);
+    console.log("Added new element to canvas");
   }
 
   // Log canvas children for debugging
@@ -159,11 +161,20 @@ socket.on('craftResult', (result: CraftResult) => {
     canvas.appendChild(newElem);
     startLoading(newElem);
     console.log("Added crafted resource to canvas");
+    startLoading(newElem);  // Start loading for the new element
+    
+    setTimeout(() => {
+        stopLoading(newElem);
+    }, 60000);  // 60 seconds to match the CSS animation
   }
 });
 
 function startLoading(elem: HTMLElement) {
   elem.classList.add('loading');
+}
+
+function stopLoading(elem: HTMLElement) {
+  elem.classList.remove('loading');
 }
 
 updatePalette();
