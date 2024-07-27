@@ -10,6 +10,7 @@ const resultDiv = document.getElementById('result') as HTMLElement;
 type Resource = {
   name: string;
   color: string;
+  emoji: string;
   product: Resource | null;
   recipe: Resource[] | null; // this must exist in the canvas for the factory to produce the "produces" resource
 }
@@ -17,6 +18,7 @@ type Resource = {
 const fire: Resource = {
   name: 'fire',
   color: '#e74c3c',
+  emoji: '🔥',
   product: null,
   recipe: null,
 }
@@ -25,6 +27,7 @@ const fire: Resource = {
 const iron: Resource = {
   name: 'fire',
   color: '#e74c3c',
+  emoji: '⛏️',
   product: null,
   recipe: null,
 }
@@ -33,6 +36,7 @@ const iron: Resource = {
 const gear: Resource = {
   name: 'gear',
   color: '#fff',
+  emoji: '⚙️',
   product: null,
   recipe: [fire, iron],
 }
@@ -41,6 +45,7 @@ const gear: Resource = {
 const ironFactory: Resource = {
   name: 'iron factory',
   color: '#fff',
+  emoji: '🔩',
   product: iron,
   recipe: [gear, gear],
 }
@@ -48,6 +53,7 @@ const ironFactory: Resource = {
 const gearFactory: Resource = {
   name: 'gear factory',
   color: '#fff',
+  emoji: '🏭',
   product: gear,
   recipe: [ironFactory, ironFactory],
 }
